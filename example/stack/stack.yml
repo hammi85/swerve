@@ -8,8 +8,7 @@ services:
       - 8000:8000
     volumes:
       - db_volume:/data
-    args:
-      - dbPath: /data
+    command: "-dbPath /data"
     networks:
       - dev
 

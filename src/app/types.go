@@ -2,9 +2,10 @@ package app
 
 // Application model
 type Application struct {
-	Config Configuration
+	Config *Configuration
 }
 
+// DynamoConnection model
 type DynamoConnection struct {
 	Host      string
 	User      string
@@ -13,6 +14,7 @@ type DynamoConnection struct {
 	Region    string
 }
 
+// Configuration model
 type Configuration struct {
 	HTTPListener  string
 	HTTPSListener string

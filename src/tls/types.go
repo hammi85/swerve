@@ -2,7 +2,8 @@ package tls
 
 import "net/http"
 
-type TLSServer struct {
+// Server model
+type Server struct {
 	Server   *http.Server
 	Listener string
 }

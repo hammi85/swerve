@@ -5,9 +5,10 @@ import (
 )
 
 func main() {
+	// new application
 	application := app.NewApplication()
-
+	// read configuration
 	application.Setup()
-
+	// run the server
 	application.Run()
 }

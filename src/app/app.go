@@ -6,10 +6,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/hammi85/swerve/src/db"
+	"github.com/hammi85/swerve/src/api"
 
 	"github.com/hammi85/swerve/src/configuration"
-
+	"github.com/hammi85/swerve/src/db"
 	"github.com/hammi85/swerve/src/tls"
 )
 
@@ -30,10 +30,18 @@ func (a *Application) Run() {
 	sigchan := make(chan os.Signal, 1)
 	signal.Notify(sigchan, os.Interrupt, syscall.SIGTERM)
 
+	// fetch domains from db
+
 	// run the https listener
-	httpsServer := tls.NewTLSServer(a.Config.HTTPSListener)
+	httpsServer := tls.NewServer(a.Config.HTTPSListener)
 	go func() {
 		log.Fatal(httpsServer.Listen())
+	}()
+
+	// run the api listener
+	apiServer := api.NewServer(a.Config.APIListener, a.DynamoDB)
+	go func() {
+		log.Fatal(apiServer.Listen())
 	}()
 
 	// wait for signals

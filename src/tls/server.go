@@ -7,21 +7,21 @@ import (
 )
 
 // Listen to the https
-func (s *TLSServer) Listen() error {
+func (s *Server) Listen() error {
+	log.Printf("HTTPS listening to %s", s.Listener)
 	return s.Server.ListenAndServeTLS("", "")
 }
 
 // GetCertificate bypass
-func (s *TLSServer) GetCertificate(hello *tls.ClientHelloInfo) (*tls.Certificate, error) {
-
+func (s *Server) GetCertificate(hello *tls.ClientHelloInfo) (*tls.Certificate, error) {
 	log.Printf("GetCertificate %#v", hello)
-
+	// extreme magic happens here
 	return nil, nil
 }
 
-// NewTLSServer creates a new instance
-func NewTLSServer(listener string) *TLSServer {
-	tlsServer := &TLSServer{
+// NewServer creates a new instance
+func NewServer(listener string) *Server {
+	tlsServer := &Server{
 		Listener: listener,
 	}
 

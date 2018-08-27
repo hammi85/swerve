@@ -2,9 +2,11 @@ package app
 
 import (
 	"github.com/hammi85/swerve/src/configuration"
+	"github.com/hammi85/swerve/src/db"
 )
 
 // Application model
 type Application struct {
-	Config *configuration.Configuration
+	Config   *configuration.Configuration
+	DynamoDB *db.DynamoDB
 }

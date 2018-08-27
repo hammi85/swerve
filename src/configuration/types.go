@@ -1,18 +1,11 @@
 package configuration
 
-// DynamoConnection model
-type DynamoConnection struct {
-	Endpoint  string
-	User      string
-	Password  string
-	TableName string
-	Region    string
-}
+import "github.com/hammi85/swerve/src/db"
 
 // Configuration model
 type Configuration struct {
 	HTTPListener  string
 	HTTPSListener string
 	APIListener   string
-	DynamoDB      DynamoConnection
+	DynamoDB      db.DynamoConnection
 }

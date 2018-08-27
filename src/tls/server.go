@@ -26,7 +26,7 @@ func NewTLSServer(listener string) *TLSServer {
 	}
 
 	tlsServer.Server = &http.Server{
-		Addr: ":https",
+		Addr: listener,
 		TLSConfig: &tls.Config{
 			GetCertificate: tlsServer.GetCertificate,
 		},

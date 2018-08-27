@@ -6,6 +6,8 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/hammi85/swerve/src/db"
+
 	"github.com/hammi85/swerve/src/configuration"
 
 	"github.com/hammi85/swerve/src/tls"
@@ -15,6 +17,12 @@ import (
 func (a *Application) Setup() {
 	a.Config.FromEnv()
 	a.Config.FromParameter()
+
+	var err error
+	a.DynamoDB, err = db.NewDynamoDB(&a.Config.DynamoDB)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 // Run the application

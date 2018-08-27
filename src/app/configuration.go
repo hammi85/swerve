@@ -35,6 +35,7 @@ func (c *Configuration) FromEnv() {
 
 // FromParameter read config from application parameter
 func (c *Configuration) FromParameter() {
+	// to be done
 }
 
 // NewConfiguration creates a new instance

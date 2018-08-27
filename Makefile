@@ -5,6 +5,7 @@ BIN=bin/swerve
 all: build/local
 
 build/local:
+	$(GO) get ./...
 	$(GO) build -o $(BIN) $(GOFLAGS) main.go
 
 run/dynamo: 

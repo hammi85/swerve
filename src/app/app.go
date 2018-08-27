@@ -6,6 +6,8 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/hammi85/swerve/src/configuration"
+
 	"github.com/hammi85/swerve/src/tls"
 )
 
@@ -26,12 +28,13 @@ func (a *Application) Run() {
 		log.Fatal(httpsServer.Listen())
 	}()
 
+	// wait for signals
 	<-sigchan
 }
 
 // NewApplication creates new instance
 func NewApplication() *Application {
 	return &Application{
-		Config: NewConfiguration(),
+		Config: configuration.NewConfiguration(),
 	}
 }

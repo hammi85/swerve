@@ -14,8 +14,8 @@ type DynamoDB struct {
 // DynamoConnection model
 type DynamoConnection struct {
 	Endpoint  string
-	User      string
-	Password  string
+	Key       string
+	Secret    string
 	TableName string
 	Region    string
 }

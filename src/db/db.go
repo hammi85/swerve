@@ -5,6 +5,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws/credentials"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -42,10 +44,16 @@ var (
 func NewDynamoDB(c *DynamoConnection) (*DynamoDB, error) {
 	ddb := &DynamoDB{}
 
-	sess, err := session.NewSession(&aws.Config{
+	config := &aws.Config{
 		Region:   aws.String(c.Region),
 		Endpoint: aws.String(c.Endpoint),
-	})
+	}
+
+	if c.Key != "" && c.Secret != "" {
+		config.Credentials = credentials.NewStaticCredentials(c.Key, c.Secret, "")
+	}
+
+	sess, err := session.NewSession(config)
 
 	if err != nil {
 		return nil, err

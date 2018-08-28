@@ -1,6 +1,7 @@
 package configuration
 
 import (
+	"flag"
 	"os"
 	"strings"
 )
@@ -39,11 +40,36 @@ func (c *Configuration) FromEnv() {
 	if dbRegion := getOSPrefixEnv("DB_REGION"); dbRegion != nil {
 		c.DynamoDB.Region = *dbRegion
 	}
+
+	if dbKey := getOSPrefixEnv("DB_KEY"); dbKey != nil {
+		if dbSecret := getOSPrefixEnv("DB_SECRET"); dbSecret != nil {
+			c.DynamoDB.Key = *dbKey
+			c.DynamoDB.Secret = *dbSecret
+		}
+	}
 }
 
 // FromParameter read config from application parameter
 func (c *Configuration) FromParameter() {
-	// to be done
+	dbEndpointPtr := flag.String("db-endpoint", "", "DynamoDB endpoint (Required)")
+	dbRegionPtr := flag.String("db-region", "", "DynamoDB region (Required)")
+	dbKeyPtr := flag.String("db-key", "", "DynamoDB credential key")
+	dbSecretPtr := flag.String("db-secret", "", "DynamoDB credential secret")
+
+	if dbEndpointPtr != nil && *dbEndpointPtr != "" {
+		c.DynamoDB.Endpoint = *dbEndpointPtr
+	}
+
+	if dbRegionPtr != nil && *dbRegionPtr != "" {
+		c.DynamoDB.Region = *dbRegionPtr
+	}
+
+	if dbKeyPtr != nil && dbSecretPtr != nil && *dbKeyPtr != "" && *dbSecretPtr != "" {
+		c.DynamoDB.Key = *dbKeyPtr
+		c.DynamoDB.Secret = *dbSecretPtr
+	}
+
+	flag.Parse()
 }
 
 // NewConfiguration creates a new instance

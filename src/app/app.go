@@ -6,13 +6,12 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/hammi85/swerve/src/certificate"
-
 	"github.com/hammi85/swerve/src/api"
-
+	"github.com/hammi85/swerve/src/certificate"
 	"github.com/hammi85/swerve/src/configuration"
 	"github.com/hammi85/swerve/src/db"
-	"github.com/hammi85/swerve/src/tls"
+	"github.com/hammi85/swerve/src/http"
+	"github.com/hammi85/swerve/src/https"
 )
 
 // Setup the application configuration
@@ -29,7 +28,7 @@ func (a *Application) Setup() {
 	}
 
 	// certificate pool
-	a.Certificates = certificate.NewManager()
+	a.Certificates = certificate.NewManager(a.DynamoDB)
 }
 
 // Run the application
@@ -38,12 +37,16 @@ func (a *Application) Run() {
 	sigchan := make(chan os.Signal, 1)
 	signal.Notify(sigchan, os.Interrupt, syscall.SIGTERM)
 
-	// fetch domains from db
-
 	// run the https listener
-	httpsServer := tls.NewServer(a.Config.HTTPSListener)
+	httpsServer := https.NewServer(a.Config.HTTPSListener, a.Certificates)
 	go func() {
 		log.Fatal(httpsServer.Listen())
+	}()
+
+	// run the http listener
+	httpServer := http.NewServer(a.Config.HTTPListener, a.Certificates)
+	go func() {
+		log.Fatal(httpServer.Listen())
 	}()
 
 	// run the api listener

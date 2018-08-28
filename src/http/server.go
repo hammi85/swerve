@@ -3,6 +3,8 @@ package http
 import (
 	"log"
 	nethttp "net/http"
+
+	"github.com/hammi85/swerve/src/certificate"
 )
 
 // Listen to the http
@@ -11,24 +13,29 @@ func (s *Server) Listen() error {
 	return s.Server.ListenAndServe()
 }
 
-/*
-func (s *Server) Handler() nethttp.Handler {
-
-	return func(resp nethttp.ResponseWriter, req *nethttp.Request) {
-
-	}
-
+// handle normal redirect request on http
+func (s *Server) handleRedirect(w nethttp.ResponseWriter, r *nethttp.Request) {
+	//hostHeader := r.Header.Get("Host")
 }
-*/
+
+// Handler for requests
+func (s *Server) Handler() nethttp.Handler {
+	return nethttp.HandlerFunc(func(w nethttp.ResponseWriter, r *nethttp.Request) {
+		s.CertManager.Serve(nethttp.HandlerFunc(s.handleRedirect), w, r)
+	})
+}
 
 // NewServer creates a new instance
-func NewServer(listener string) *Server {
+func NewServer(listener string, certManager *certificate.Manager) *Server {
 	server := &Server{
-		Listener: listener,
+		Listener:    listener,
+		CertManager: certManager,
 	}
 
 	server.Server = &nethttp.Server{
-		Addr: listener}
+		Addr:    listener,
+		Handler: server.Handler(),
+	}
 
 	return server
 }

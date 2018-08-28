@@ -71,6 +71,27 @@ func (d *DynamoDB) prepareTable() {
 	}
 }
 
+// UpdateCertificateData updates the cert data if a domain entry exist
+func (d *DynamoDB) UpdateCertificateData(domain string, data []byte) error {
+	_, err := d.Service.UpdateItem(&dynamodb.UpdateItemInput{
+		TableName: aws.String(dbDomainTableName),
+		Key: map[string]*dynamodb.AttributeValue{
+			"domain": {
+				S: aws.String(domain),
+			},
+		},
+		UpdateExpression: aws.String("set certificate = :c"),
+		ReturnValues:     aws.String("UPDATED_NEW"),
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":c": {
+				S: aws.String(string(data)),
+			},
+		},
+	})
+
+	return err
+}
+
 // DeleteByDomain items from domains table
 func (d *DynamoDB) DeleteByDomain(domain string) (bool, error) {
 	out, err := d.Service.DeleteItem(&dynamodb.DeleteItemInput{

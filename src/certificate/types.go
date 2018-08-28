@@ -1,6 +1,9 @@
 package certificate
 
 import (
+	"sync"
+	"time"
+
 	"github.com/hammi85/swerve/src/db"
 	"golang.org/x/crypto/acme/autocert"
 )
@@ -14,5 +17,8 @@ type Manager struct {
 // persistentCertCache certificate cache
 type persistentCertCache struct {
 	autocert.Cache
-	db *db.DynamoDB
+	db         *db.DynamoDB
+	pollTicker *time.Ticker
+	mapMutex   sync.Mutex
+	domainsMap map[string]db.Domain
 }

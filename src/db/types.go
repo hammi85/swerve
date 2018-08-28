@@ -1,8 +1,6 @@
 package db
 
 import (
-	"time"
-
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 )
@@ -35,5 +33,6 @@ type Domain struct {
 	Certificate  string `json:"certificate"`
 	RedirectCode int    `json:"code"`
 	Description  string `json:"description"`
-	Created      time.Time
+	Created      string `json:"created"`
+	Modified     string `json:"modified"`
 }

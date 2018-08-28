@@ -5,6 +5,8 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/julienschmidt/httprouter"
+
 	"github.com/hammi85/swerve/src/db"
 )
 
@@ -15,9 +17,17 @@ func NewServer(listener string, dynDB *db.DynamoDB) *Server {
 		db:       dynDB,
 	}
 
+	// register api router
+	router := httprouter.New()
+	router.GET("/health", server.health)
+	router.GET("/domain", server.fetchAllDomains)
+	router.GET("/domain/:name", server.fetchDomain)
+	router.POST("/domain", server.registerDomain)
+	router.DELETE("/domain/:name", server.purgeDomain)
+
 	server.Server = &http.Server{
 		Addr:    listener,
-		Handler: server.getMux(),
+		Handler: router,
 	}
 
 	return server
@@ -29,43 +39,60 @@ func (s *Server) Listen() error {
 	return s.Server.ListenAndServe()
 }
 
-func (s *Server) health(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", 405)
-		return
-	}
-
+// health handler
+func (s *Server) health(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte("{\"status\":\"ok\"}"))
 }
 
-func (s *Server) purgeDomain(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodDelete {
-		http.Error(w, "Method not allowed", 405)
+// purgeDomain deletes a domain entry
+func (s *Server) purgeDomain(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	domain, err := s.db.FetchByDomain(ps.ByName("name"))
+
+	if domain == nil || err != nil {
+		http.NotFound(w, r)
 		return
 	}
 
+	if _, err = s.db.DeleteByDomain(ps.ByName("name")); err != nil {
+		log.Printf("Can't delete entity %#v", err)
+		w.WriteHeader(500)
+		return
+	}
+
+	w.WriteHeader(204)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte("{\"status\":\"ok\"}"))
 }
 
-func (s *Server) fetchAllDomains(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", 405)
+// fetchAllDomains return a list of all domains
+func (s *Server) fetchAllDomains(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	domains, err := s.db.FetchAll()
+	if err != nil {
+		http.Error(w, "Error while fetching domains", 500)
 		return
 	}
 
-	s.db.FetchAll()
+	jsonBytes, err := json.Marshal(domains)
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte("{\"status\":\"ok\"}"))
+	w.Write(jsonBytes)
 }
 
-func (s *Server) registerDomain(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", 405)
+func (s *Server) fetchDomain(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	domain, err := s.db.FetchByDomain(ps.ByName("name"))
+
+	if err != nil {
+		log.Printf("Error while fetch domain '%s' %#v", ps.ByName("name"), err)
+		http.NotFound(w, r)
 		return
 	}
 
+	jsonBytes, err := json.Marshal(domain)
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonBytes)
+}
+
+func (s *Server) registerDomain(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	if r.Body == nil {
 		http.Error(w, "Please send a request body", 400)
 		return
@@ -73,30 +100,17 @@ func (s *Server) registerDomain(w http.ResponseWriter, r *http.Request) {
 
 	var domain db.Domain
 
-	err := json.NewDecoder(r.Body).Decode(&domain)
-	if err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&domain); err != nil {
 		http.Error(w, err.Error(), 400)
 		return
 	}
 
-	err = s.db.InsertDomain(domain)
-	if err != nil {
+	if err := s.db.InsertDomain(domain); err != nil {
 		http.Error(w, err.Error(), 400)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
 	w.Write([]byte("{\"status\":\"ok\"}"))
-}
-
-// GetMux returns the router handler
-func (s *Server) getMux() http.Handler {
-	mux := http.NewServeMux()
-
-	mux.HandleFunc("/domain", s.fetchAllDomains)
-	mux.HandleFunc("/domain/register", s.registerDomain)
-	mux.HandleFunc("/domain/purge", s.purgeDomain)
-	mux.HandleFunc("/health", s.health)
-
-	return mux
 }

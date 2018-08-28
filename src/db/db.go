@@ -3,29 +3,29 @@ package db
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+	uuid "github.com/satori/go.uuid"
 )
 
 const (
-	dbTableName = "Domains"
+	dbDomainTableName = "Domains"
 )
 
 var (
 	dbListAllDomains = &dynamodb.ScanInput{
-		TableName: aws.String(dbTableName),
+		TableName: aws.String(dbDomainTableName),
 	}
-	dbTableCreate = &dynamodb.CreateTableInput{
-		TableName: aws.String(dbTableName),
+	dbDomainTableCreate = &dynamodb.CreateTableInput{
+		TableName: aws.String(dbDomainTableName),
 		KeySchema: []*dynamodb.KeySchemaElement{
-			{AttributeName: aws.String("id"), KeyType: aws.String("HASH")},
-			{AttributeName: aws.String("domain"), KeyType: aws.String("RANGE")},
+			{AttributeName: aws.String("domain"), KeyType: aws.String("HASH")},
 		},
 		AttributeDefinitions: []*dynamodb.AttributeDefinition{
-			{AttributeName: aws.String("id"), AttributeType: aws.String("S")},
 			{AttributeName: aws.String("domain"), AttributeType: aws.String("S")},
 		},
 		ProvisionedThroughput: &dynamodb.ProvisionedThroughput{
@@ -33,8 +33,8 @@ var (
 			WriteCapacityUnits: aws.Int64(1),
 		},
 	}
-	dbTableDescribe = &dynamodb.DescribeTableInput{
-		TableName: aws.String(dbTableName),
+	dbDomainTableDescribe = &dynamodb.DescribeTableInput{
+		TableName: aws.String(dbDomainTableName),
 	}
 )
 
@@ -61,31 +61,76 @@ func NewDynamoDB(c *DynamoConnection) (*DynamoDB, error) {
 
 // prepareTable checks for the main table
 func (d *DynamoDB) prepareTable() {
-	// get the table description
-	_, err := d.Service.DescribeTable(dbTableDescribe)
-	if err != nil {
+	// setup the domain table by spec
+	if _, err := d.Service.DescribeTable(dbDomainTableDescribe); err != nil {
 		log.Println("Table 'Domains' didn't exists. Creating ...")
-		_, cerr := d.Service.CreateTable(dbTableCreate)
-		if cerr != nil {
+		if _, cerr := d.Service.CreateTable(dbDomainTableCreate); cerr != nil {
 			log.Fatal(cerr)
 		}
 		log.Println("Table 'Domains' created")
 	}
 }
 
-// FetchAll items from domains table
-func (d *DynamoDB) FetchAll() error {
-	itemList, err := d.Service.Scan(dbListAllDomains)
-	log.Printf("FetchAll %#v", itemList)
+// DeleteByDomain items from domains table
+func (d *DynamoDB) DeleteByDomain(domain string) (bool, error) {
+	out, err := d.Service.DeleteItem(&dynamodb.DeleteItemInput{
+		Key: map[string]*dynamodb.AttributeValue{
+			"domain": {
+				S: aws.String(domain),
+			},
+		},
+		TableName: aws.String(dbDomainTableName),
+	})
+
+	return out != nil && err == nil, err
+}
+
+// FetchByDomain items from domains table
+func (d *DynamoDB) FetchByDomain(domain string) (*Domain, error) {
+	res, err := d.Service.GetItem(&dynamodb.GetItemInput{
+		TableName: aws.String(dbDomainTableName),
+		Key: map[string]*dynamodb.AttributeValue{
+			"domain": {
+				S: aws.String(domain),
+			},
+		},
+	})
+
 	if err != nil {
-		return fmt.Errorf("Error while fetching domain items %v", err)
+		return nil, fmt.Errorf("Error while getting item. %v", err)
 	}
 
-	return nil
+	domainRes := &Domain{}
+	if err = dynamodbattribute.UnmarshalMap(res.Item, &domainRes); err == nil {
+		return domainRes, nil
+	}
+
+	return nil, nil
+}
+
+// FetchAll items from domains table
+func (d *DynamoDB) FetchAll() ([]Domain, error) {
+	itemList, err := d.Service.Scan(dbListAllDomains)
+
+	if err != nil {
+		return nil, fmt.Errorf("Error while fetching domain items %v", err)
+	}
+
+	recs := []Domain{}
+	err = dynamodbattribute.UnmarshalListOfMaps(itemList.Items, &recs)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to unmarshal Dynamodb Scan Items, %v", err)
+	}
+
+	return recs, nil
 }
 
 // InsertDomain stores a domain
 func (d *DynamoDB) InsertDomain(domain Domain) error {
+	domain.ID = uuid.Must(uuid.NewV4()).String()
+	domain.Created = time.Now().Format(time.RFC3339)
+	domain.Modified = domain.Created
+
 	mm, err := dynamodbattribute.MarshalMap(domain)
 
 	if err != nil {
@@ -94,7 +139,7 @@ func (d *DynamoDB) InsertDomain(domain Domain) error {
 
 	_, err = d.Service.PutItem(&dynamodb.PutItemInput{
 		Item:      mm,
-		TableName: aws.String(dbTableName),
+		TableName: aws.String(dbDomainTableName),
 	})
 
 	return err

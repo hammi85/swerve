@@ -28,7 +28,7 @@ func (a *Application) Setup() {
 	var err error
 	a.DynamoDB, err = db.NewDynamoDB(&a.Config.DynamoDB)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Can't setup db connection %#v", err)
 	}
 
 	// certificate pool
@@ -63,6 +63,8 @@ func (a *Application) Run() {
 
 	// wait for signals
 	<-sigchan
+
+	log.Info("Exit application")
 }
 
 // NewApplication creates new instance

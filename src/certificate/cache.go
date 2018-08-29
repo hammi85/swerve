@@ -119,14 +119,14 @@ func (c *persistentCertCache) observe() error {
 
 // IsDomainAcceptable test for domains in cache
 func (c *persistentCertCache) IsDomainAcceptable(domain string) (*db.Domain, bool) {
-	log.Info("IsDomainAcceptable mutes %#v", c)
+	log.Infof("IsDomainAcceptable mutes %#v", c)
 	c.mapMutex.Lock()
 	defer c.mapMutex.Unlock()
 
-	log.Info("IsDomainAcceptable map lookup for %s", domain)
+	log.Infof("IsDomainAcceptable map lookup for %s", domain)
 
 	d, ok := c.domainsMap[domain]
-	log.Info("IsDomainAcceptable domain %#v ok %v", d, ok)
+	log.Infof("IsDomainAcceptable domain %#v ok %v", d, ok)
 
 	return &d, ok
 }

@@ -91,7 +91,7 @@ func (c *persistentCertCache) Delete(ctx context.Context, key string) error {
 
 	go func() {
 		defer close(done)
-		_, err = c.db.DeleteByDomain(key)
+		err = c.db.UpdateCertificateData(key, []byte{})
 	}()
 
 	// handle context timeouts and errors
@@ -115,10 +115,11 @@ func (c *persistentCertCache) observe() error {
 	return nil
 }
 
-func (c *persistentCertCache) IsDomainAcceptable(domain string) bool {
+// IsDomainAcceptable test for domains in cache
+func (c *persistentCertCache) IsDomainAcceptable(domain string) (*db.Domain, bool) {
 	c.mapMutex.Lock()
 	defer c.mapMutex.Unlock()
 
-	_, ok := c.domainsMap[domain]
-	return ok
+	d, ok := c.domainsMap[domain]
+	return &d, ok
 }

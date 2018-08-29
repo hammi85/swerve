@@ -47,6 +47,14 @@ func (c *Configuration) FromEnv() {
 			c.DynamoDB.Secret = *dbSecret
 		}
 	}
+
+	if logLevel := getOSPrefixEnv("LOG_LEVEL"); logLevel != nil {
+		c.LogLevel = *logLevel
+	}
+
+	if logFormatter := getOSPrefixEnv("LOG_FORMATTER"); logFormatter != nil {
+		c.LogFormatter = *logFormatter
+	}
 }
 
 // FromParameter read config from application parameter
@@ -55,6 +63,11 @@ func (c *Configuration) FromParameter() {
 	dbRegionPtr := flag.String("db-region", "", "DynamoDB region (Required)")
 	dbKeyPtr := flag.String("db-key", "", "DynamoDB credential key")
 	dbSecretPtr := flag.String("db-secret", "", "DynamoDB credential secret")
+
+	logLevelPtr := flag.String("log-level", "", "Set the log level (info,debug,warning,error,fatal,panic)")
+	logFormatterPtr := flag.String("log-formatter", "", "Set the log formatter (text,json)")
+
+	flag.Parse()
 
 	if dbEndpointPtr != nil && *dbEndpointPtr != "" {
 		c.DynamoDB.Endpoint = *dbEndpointPtr
@@ -69,7 +82,13 @@ func (c *Configuration) FromParameter() {
 		c.DynamoDB.Secret = *dbSecretPtr
 	}
 
-	flag.Parse()
+	if logLevelPtr != nil && *logLevelPtr != "" {
+		c.LogLevel = *logLevelPtr
+	}
+
+	if logFormatterPtr != nil && *logFormatterPtr != "" {
+		c.LogFormatter = *logFormatterPtr
+	}
 }
 
 // NewConfiguration creates a new instance
@@ -78,5 +97,7 @@ func NewConfiguration() *Configuration {
 		HTTPListener:  ":8080",
 		HTTPSListener: ":8081",
 		APIListener:   ":8082",
+		LogFormatter:  "text",
+		LogLevel:      "debug",
 	}
 }

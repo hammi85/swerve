@@ -2,12 +2,11 @@ package api
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
-	"github.com/julienschmidt/httprouter"
-
 	"github.com/hammi85/swerve/src/db"
+	"github.com/hammi85/swerve/src/log"
+	"github.com/julienschmidt/httprouter"
 )
 
 // NewServer creates a new instance
@@ -35,7 +34,7 @@ func NewServer(listener string, dynDB *db.DynamoDB) *Server {
 
 // Listen to socket
 func (s *Server) Listen() error {
-	log.Printf("API listening to %s", s.Listener)
+	log.Infof("API listening to %s", s.Listener)
 	return s.Server.ListenAndServe()
 }
 
@@ -55,7 +54,7 @@ func (s *Server) purgeDomain(w http.ResponseWriter, r *http.Request, ps httprout
 	}
 
 	if _, err = s.db.DeleteByDomain(ps.ByName("name")); err != nil {
-		log.Printf("Can't delete entity %#v", err)
+		log.Infof("Can't delete entity %#v", err)
 		w.WriteHeader(500)
 		return
 	}
@@ -82,7 +81,7 @@ func (s *Server) fetchDomain(w http.ResponseWriter, r *http.Request, ps httprout
 	domain, err := s.db.FetchByDomain(ps.ByName("name"))
 
 	if err != nil {
-		log.Printf("Error while fetch domain '%s' %#v", ps.ByName("name"), err)
+		log.Infof("Error while fetch domain '%s' %#v", ps.ByName("name"), err)
 		http.NotFound(w, r)
 		return
 	}

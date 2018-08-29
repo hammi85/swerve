@@ -10,7 +10,7 @@ type fallbackHandler struct{}
 
 // Server model
 type Server struct {
-	CertManager *certificate.Manager
+	certManager *certificate.Manager
 	Server      *nethttp.Server
 	Listener    string
 }

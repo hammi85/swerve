@@ -1,7 +1,8 @@
 package app
 
 import (
-	"log"
+	"github.com/hammi85/swerve/src/log"
+
 	"os"
 	"os/signal"
 	"syscall"
@@ -19,6 +20,9 @@ func (a *Application) Setup() {
 	// read config
 	a.Config.FromEnv()
 	a.Config.FromParameter()
+
+	// setup logger
+	log.SetupLogger(a.Config.LogLevel, a.Config.LogFormatter)
 
 	// database connection
 	var err error
@@ -54,6 +58,8 @@ func (a *Application) Run() {
 	go func() {
 		log.Fatal(apiServer.Listen())
 	}()
+
+	log.Info("Swerve redirector")
 
 	// wait for signals
 	<-sigchan

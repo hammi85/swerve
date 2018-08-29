@@ -8,4 +8,6 @@ type Configuration struct {
 	HTTPSListener string
 	APIListener   string
 	DynamoDB      db.DynamoConnection
+	LogLevel      string
+	LogFormatter  string
 }

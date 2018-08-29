@@ -15,7 +15,7 @@ func (s *Server) Listen() error {
 
 // handle normal redirect request on http
 func (s *Server) handleRedirect(w nethttp.ResponseWriter, r *nethttp.Request) {
-	hostHeader := r.Header.Get("Host")
+	hostHeader := r.Host
 	domain, err := s.certManager.GetDomain(hostHeader)
 
 	if domain != nil && err == nil {

@@ -17,7 +17,7 @@ func (s *Server) Listen() error {
 // RedirectHandler redirects the request to the domain redirect location
 func (s *Server) RedirectHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		hostHeader := r.Header.Get("Host")
+		hostHeader := r.Host
 		domain, err := s.certManager.GetDomain(hostHeader)
 
 		if domain != nil && err == nil {

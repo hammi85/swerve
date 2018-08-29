@@ -2,6 +2,7 @@ package certificate
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/hammi85/swerve/src/db"
@@ -19,6 +20,7 @@ func newPersistentCertCache(d *db.DynamoDB) *persistentCertCache {
 		pollTicker: time.NewTicker(time.Second * pollTickerInterval),
 		db:         d,
 		domainsMap: map[string]db.Domain{},
+		mapMutex:   &sync.Mutex{},
 	}
 
 	// cache preload

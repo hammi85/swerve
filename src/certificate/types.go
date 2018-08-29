@@ -19,6 +19,6 @@ type persistentCertCache struct {
 	autocert.Cache
 	db         *db.DynamoDB
 	pollTicker *time.Ticker
-	mapMutex   sync.Mutex
+	mapMutex   *sync.Mutex
 	domainsMap map[string]db.Domain
 }

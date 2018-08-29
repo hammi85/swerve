@@ -20,7 +20,7 @@ func SetupLogger(level string, outType string) {
 	switch outType {
 	case "json":
 		logrus.SetFormatter(new(logrus.JSONFormatter))
-	case "shell":
+	case "text":
 		logrus.SetFormatter(new(logrus.TextFormatter))
 	default:
 		logrus.SetFormatter(new(logrus.TextFormatter))

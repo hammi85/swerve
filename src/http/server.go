@@ -2,10 +2,22 @@ package http
 
 import (
 	nethttp "net/http"
+	"net/url"
+	"path"
 
 	"github.com/hammi85/swerve/src/certificate"
 	"github.com/hammi85/swerve/src/log"
 )
+
+// promoteRedirect append the path + querystring to the redirect host
+func promoteRedirect(redirect string, reqURL *url.URL) string {
+	newRedirect := path.Join(redirect, reqURL.Path)
+	if len(reqURL.RawQuery) > 0 {
+		newRedirect = newRedirect + "?" + reqURL.RawQuery
+	}
+
+	return newRedirect
+}
 
 // Listen to the http
 func (s *Server) Listen() error {
@@ -19,7 +31,13 @@ func (s *Server) handleRedirect(w nethttp.ResponseWriter, r *nethttp.Request) {
 	domain, err := s.certManager.GetDomain(hostHeader)
 
 	if domain != nil && err == nil {
-		nethttp.Redirect(w, r, domain.Redirect, domain.RedirectCode)
+		redirect := domain.Redirect
+		if domain.Promotable {
+			redirect = promoteRedirect(redirect, r.URL)
+		}
+
+		log.Infof("http redirect %s => %s", r.URL.String(), redirect)
+		nethttp.Redirect(w, r, redirect, domain.RedirectCode)
 		return
 	}
 

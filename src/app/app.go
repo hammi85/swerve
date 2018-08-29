@@ -26,7 +26,7 @@ func (a *Application) Setup() {
 
 	// database connection
 	var err error
-	a.DynamoDB, err = db.NewDynamoDB(&a.Config.DynamoDB)
+	a.DynamoDB, err = db.NewDynamoDB(&a.Config.DynamoDB, a.Config.Bootstrap)
 	if err != nil {
 		log.Fatalf("Can't setup db connection %#v", err)
 	}

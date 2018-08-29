@@ -48,6 +48,10 @@ func (c *Configuration) FromEnv() {
 		}
 	}
 
+	if dbBootstrap := getOSPrefixEnv("BOOTSTRAP"); dbBootstrap != nil {
+		c.Bootstrap = len(*dbBootstrap) > 0 && *dbBootstrap != "0"
+	}
+
 	if logLevel := getOSPrefixEnv("LOG_LEVEL"); logLevel != nil {
 		c.LogLevel = *logLevel
 	}
@@ -63,6 +67,7 @@ func (c *Configuration) FromParameter() {
 	dbRegionPtr := flag.String("db-region", "", "DynamoDB region (Required)")
 	dbKeyPtr := flag.String("db-key", "", "DynamoDB credential key")
 	dbSecretPtr := flag.String("db-secret", "", "DynamoDB credential secret")
+	dbBootstrapPtr := flag.Bool("bootstrap", false, "Bootstrap the database")
 
 	logLevelPtr := flag.String("log-level", "", "Set the log level (info,debug,warning,error,fatal,panic)")
 	logFormatterPtr := flag.String("log-formatter", "", "Set the log formatter (text,json)")
@@ -82,6 +87,10 @@ func (c *Configuration) FromParameter() {
 		c.DynamoDB.Secret = *dbSecretPtr
 	}
 
+	if dbBootstrapPtr != nil && *dbBootstrapPtr {
+		c.Bootstrap = *dbBootstrapPtr
+	}
+
 	if logLevelPtr != nil && *logLevelPtr != "" {
 		c.LogLevel = *logLevelPtr
 	}
@@ -99,5 +108,6 @@ func NewConfiguration() *Configuration {
 		APIListener:   ":8082",
 		LogFormatter:  "text",
 		LogLevel:      "debug",
+		Bootstrap:     false,
 	}
 }

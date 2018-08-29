@@ -10,4 +10,5 @@ type Configuration struct {
 	DynamoDB      db.DynamoConnection
 	LogLevel      string
 	LogFormatter  string
+	Bootstrap     bool
 }

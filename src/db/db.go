@@ -40,12 +40,15 @@ var (
 )
 
 // NewDynamoDB creates a new instance
-func NewDynamoDB(c *DynamoConnection) (*DynamoDB, error) {
+func NewDynamoDB(c *DynamoConnection, bootstrap bool) (*DynamoDB, error) {
 	ddb := &DynamoDB{}
 
 	config := &aws.Config{
-		Region:   aws.String(c.Region),
-		Endpoint: aws.String(c.Endpoint),
+		Region: aws.String(c.Region),
+	}
+
+	if c.Endpoint != "" {
+		config.Endpoint = aws.String(c.Endpoint)
 	}
 
 	if c.Key != "" && c.Secret != "" {
@@ -61,7 +64,9 @@ func NewDynamoDB(c *DynamoConnection) (*DynamoDB, error) {
 	ddb.Session = sess
 	ddb.Service = dynamodb.New(sess)
 
-	ddb.prepareTable()
+	if bootstrap {
+		ddb.prepareTable()
+	}
 
 	return ddb, nil
 }
@@ -70,6 +75,7 @@ func NewDynamoDB(c *DynamoConnection) (*DynamoDB, error) {
 func (d *DynamoDB) prepareTable() {
 	// setup the domain table by spec
 	if _, err := d.Service.DescribeTable(dbDomainTableDescribe); err != nil {
+		log.Error(err)
 		log.Info("Table 'Domains' didn't exists. Creating ...")
 		if _, cerr := d.Service.CreateTable(dbDomainTableCreate); cerr != nil {
 			log.Fatal(cerr)

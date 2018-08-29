@@ -16,12 +16,14 @@ var (
 
 // NewManager creates a new instance
 func NewManager(d *db.DynamoDB) *Manager {
-	manager := &Manager{}
+	manager := &Manager{
+		certCache: newPersistentCertCache(d),
+	}
 
 	manager.acmeManager = &autocert.Manager{
 		Prompt:     autocert.AcceptTOS,
 		HostPolicy: manager.allowHostPolicy,
-		Cache:      newPersistentCertCache(d),
+		Cache:      manager.certCache,
 	}
 
 	return manager

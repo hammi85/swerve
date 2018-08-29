@@ -2,15 +2,14 @@ package db
 
 import (
 	"fmt"
-	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws/credentials"
-
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+	"github.com/hammi85/swerve/src/log"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -71,11 +70,11 @@ func NewDynamoDB(c *DynamoConnection) (*DynamoDB, error) {
 func (d *DynamoDB) prepareTable() {
 	// setup the domain table by spec
 	if _, err := d.Service.DescribeTable(dbDomainTableDescribe); err != nil {
-		log.Println("Table 'Domains' didn't exists. Creating ...")
+		log.Info("Table 'Domains' didn't exists. Creating ...")
 		if _, cerr := d.Service.CreateTable(dbDomainTableCreate); cerr != nil {
 			log.Fatal(cerr)
 		}
-		log.Println("Table 'Domains' created")
+		log.Info("Table 'Domains' created")
 	}
 }
 

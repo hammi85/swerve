@@ -1,11 +1,10 @@
 package http
 
 import (
-	"github.com/hammi85/swerve/src/log"
-
 	nethttp "net/http"
 
 	"github.com/hammi85/swerve/src/certificate"
+	"github.com/hammi85/swerve/src/log"
 )
 
 // Listen to the http

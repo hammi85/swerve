@@ -2,10 +2,10 @@ package certificate
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"github.com/hammi85/swerve/src/db"
+	"github.com/hammi85/swerve/src/log"
 	"golang.org/x/crypto/acme/autocert"
 )
 
@@ -32,7 +32,7 @@ func newPersistentCertCache(d *db.DynamoDB) *persistentCertCache {
 func (c *persistentCertCache) updateDomainCache() {
 	domains, err := c.db.FetchAll()
 	if err != nil {
-		log.Printf("Error while fetching domain list %v", err)
+		log.Errorf("Error while fetching domain list %v", err)
 		return
 	}
 
